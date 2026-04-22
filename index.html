@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Score Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --card: #0f1628;
+    --card2: #141d35;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --green: #00ff88;
+    --red: #ff3366;
+    --text: #e8eaf6;
+    --muted: #5c6bc0;
+    --border: rgba(0,229,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 20% 20%, rgba(0,229,255,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255,107,53,0.04) 0%, transparent 50%);
+    animation: bgPulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes bgPulse {
+    0% { transform: scale(1) rotate(0deg); }
+    100% { transform: scale(1.1) rotate(3deg); }
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 40px 0 30px;
+    position: relative;
+  }
+
+  .logo-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(36px, 8vw, 72px);
+    letter-spacing: 4px;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .card-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-title svg { width: 20px; height: 20px; }
+
+  /* Form Grid */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  select, input[type="number"] {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+
+  select:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+  }
+
+  select option { background: #1a2340; }
+
+  /* Sliders */
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    background: var(--card2);
+    border-radius: 2px;
+    outline: none;
+    border: 1px solid var(--border);
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,229,255,0.5);
+    transition: transform 0.2s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+  .slider-val {
+    min-width: 50px;
+    text-align: center;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  /* Predict Button */
+  .predict-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), #0088aa);
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .predict-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,229,255,0.4);
+  }
+
+  .predict-btn:active { transform: translateY(0); }
+
+  .predict-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+
+  .predict-btn:hover::after { transform: translateX(100%); }
+
+  /* Results */
+  #results {
+    display: none;
+    animation: slideUp 0.5s ease;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .score-display {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(0,229,255,0.02));
+    border: 1px solid rgba(0,229,255,0.3);
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+
+  .score-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .score-number {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 64px;
+    letter-spacing: 4px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .score-range {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Win meter */
+  .win-bars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .win-bar-card {
+    background: var(--card2);
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .win-team { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+
+  .win-bar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .win-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .win-pct {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 500px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .stat-box {
+    background: var(--card2);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .stat-val { font-family: 'Bebas Neue', cursive; font-size: 22px; letter-spacing: 1px; }
+
+  /* Key factors */
+  .factors-list { list-style: none; }
+  .factors-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .factors-list li:last-child { border-bottom: none; }
+
+  .factor-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .factor-impact {
+    margin-left: auto;
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .impact-high { background: rgba(0,255,136,0.15); color: var(--green); }
+  .impact-med { background: rgba(0,229,255,0.15); color: var(--accent); }
+  .impact-low { background: rgba(255,107,53,0.15); color: var(--accent2); }
+
+  /* Loading */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+  }
+
+  .spinner {
+    width: 50px; height: 50px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    animation: blink 1s ease infinite alternate;
+  }
+
+  @keyframes blink { from { opacity: 0.4; } to { opacity: 1; } }
+
+  /* Error box */
+  .error-box {
+    background: rgba(255,51,102,0.1);
+    border: 1px solid rgba(255,51,102,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--red);
+    font-size: 14px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* Confidence badge */
+  .confidence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .conf-high { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+  .conf-med { background: rgba(0,229,255,0.15); color: var(--accent); border: 1px solid rgba(0,229,255,0.3); }
+  .conf-low { background: rgba(255,107,53,0.15); color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); }
+
+  /* Tooltip like info badges */
+  .match-format-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .tab-btn.active {
+    background: rgba(0,229,255,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .disclaimer {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-tag">⚡ AI POWERED</div>
+    <h1>SCORE<br>PREDICTOR</h1>
+    <p class="subtitle">Cricket Match Intelligence Engine</p>
+  </header>
+
+  <!-- Match Setup -->
+  <div class="card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+      </svg>
+      MATCH SETUP
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label style="display:block;margin-bottom:8px;">MATCH FORMAT</label>
+      <div class="match-format-tabs">
+        <button class="tab-btn active" onclick="setFormat('T20',this)">T20</button>
+        <button class="tab-btn" onclick="setFormat('ODI',this)">ODI</button>
+        <button class="tab-btn" onclick="setFormat('TEST',this)">TEST</button>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Batting Team</label>
+        <select id="team1">
+          <option value="">Select Team</option>
+          <option>India</option><option>Australia</option><option>England</option>
+          <option>Pakistan</option><option>South Africa</option><option>New Zealand</option>
+          <option>West Indies</option><option>Sri Lanka</option><option>Bangladesh</option>
+          <option>Afghanistan</option><option>Zimbabwe</option><option>Ireland</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Bowling Team</label>
+        <select id="team2">
+          <option value="">Select Team</option>
+          <option>Australia</option><option>India</option><option>England</option>
+          <option>Pakistan</option><option>South Africa</option><option>New Zealand</option>
+          <option>West Indies</option><option>Sri Lanka</option><option>Bangladesh</option>
+          <option>Afghanistan</option><option>Zimbabwe</option><option>Ireland</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Venue / Pitch</label>
+        <select id="venue">
+          <option value="">Select Venue</option>
+          <option value="batting">Batting Friendly (Flat)</option>
+          <option value="balanced">Balanced Pitch</option>
+          <option value="bowling">Bowling Friendly</option>
+          <option value="spin">Spin Friendly</option>
+          <option value="seam">Seam Friendly</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Weather</label>
+        <select id="weather">
+          <option value="clear">☀️ Clear / Sunny</option>
+          <option value="overcast">☁️ Overcast</option>
+          <option value="humid">💧 Humid</option>
+          <option value="windy">🌬️ Windy</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Match State -->
+  <div class="card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      CURRENT MATCH STATE
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Current Score (Runs)</label>
+        <input type="number" id="currentRuns" placeholder="e.g. 120" min="0" max="500" value="120">
+      </div>
+      <div class="form-group">
+        <label>Wickets Fallen</label>
+        <input type="number" id="wickets" placeholder="0-10" min="0" max="10" value="3">
+      </div>
+      <div class="form-group full">
+        <label>Overs Completed — <span id="oversLabel">12.0</span></label>
+        <div class="slider-group">
+          <input type="range" id="overs" min="0" max="20" step="0.1" value="12"
+            oninput="document.getElementById('oversLabel').textContent=parseFloat(this.value).toFixed(1)">
+          <span class="slider-val" id="oversVal">12.0</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Current Run Rate</label>
+        <input type="number" id="crr" placeholder="e.g. 8.5" step="0.1" min="0" max="20" value="8.5">
+      </div>
+      <div class="form-group">
+        <label>Last 5 Overs (Runs)</label>
+        <input type="number" id="last5" placeholder="e.g. 55" min="0" max="120" value="55">
+      </div>
+      <div class="form-group">
+        <label>Batting Avg of Top Order</label>
+        <select id="battingStrength">
+          <option value="elite">Elite (35+ avg)</option>
+          <option value="strong" selected>Strong (28-35 avg)</option>
+          <option value="average">Average (20-28 avg)</option>
+          <option value="weak">Weak (&lt;20 avg)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Bowling Quality</label>
+        <select id="bowlingQuality">
+          <option value="elite">Elite Attack</option>
+          <option value="strong" selected>Strong Attack</option>
+          <option value="average">Average Attack</option>
+          <option value="weak">Weak Attack</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <button class="predict-btn" onclick="predict()">
+    ⚡ PREDICT FINAL SCORE
+  </button>
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">ANALYZING MATCH DATA...</div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="card">
+      <div class="result-header">
+        <div class="card-title" style="margin:0">📊 PREDICTION RESULTS</div>
+        <div class="confidence-badge" id="confBadge">HIGH CONFIDENCE</div>
+      </div>
+
+      <div class="score-display">
+        <div class="score-label">Predicted Final Score</div>
+        <div class="score-number" id="predScore">—</div>
+        <div class="score-range" id="scoreRange">Range: — to —</div>
+      </div>
+
+      <div class="win-bars">
+        <div class="win-bar-card">
+          <div class="win-team" id="team1Name" style="color:var(--accent)">BATTING TEAM</div>
+          <div class="win-bar-track">
+            <div class="win-bar-fill" id="bar1" style="width:0%;background:var(--accent)"></div>
+          </div>
+          <div class="win-pct" id="pct1" style="color:var(--accent)">0%</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">Win Probability</div>
+        </div>
+        <div class="win-bar-card">
+          <div class="win-team" id="team2Name" style="color:var(--accent2)">BOWLING TEAM</div>
+          <div class="win-bar-track">
+            <div class="win-bar-fill" id="bar2" style="width:0%;background:var(--accent2)"></div>
+          </div>
+          <div class="win-pct" id="pct2" style="color:var(--accent2)">0%</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">Win Probability</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Projected RR</div>
+          <div class="stat-val" id="projRR" style="color:var(--accent)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Req. to Beat</div>
+          <div class="stat-val" id="reqScore" style="color:var(--accent2)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Wickets Left</div>
+          <div class="stat-val" id="wicketsLeft" style="color:var(--green)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Overs Left</div>
+          <div class="stat-val" id="oversLeft" style="color:var(--green)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Momentum</div>
+          <div class="stat-val" id="momentum">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Format</div>
+          <div class="stat-val" id="formatLabel" style="color:var(--muted)">T20</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        KEY PREDICTION FACTORS
+      </div>
+      <ul class="factors-list" id="factorsList"></ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🤖 AI ANALYSIS</div>
+      <div id="aiAnalysis" style="line-height:1.7;font-size:15px;color:#b0b8d4;">
+        Loading analysis...
+      </div>
+    </div>
+  </div>
+
+  <p class="disclaimer">⚡ Predictions based on statistical modeling & AI analysis. For entertainment purposes. Results may vary.</p>
+</div>
+
+<script>
+let matchFormat = 'T20';
+const maxOvers = { T20: 20, ODI: 50, TEST: 90 };
+
+function setFormat(f, btn) {
+  matchFormat = f;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const maxO = maxOvers[f];
+  const slider = document.getElementById('overs');
+  slider.max = maxO;
+  if (parseFloat(slider.value) > maxO) slider.value = maxO;
+  document.getElementById('oversLabel').textContent = parseFloat(slider.value).toFixed(1);
+  document.getElementById('oversVal').textContent = parseFloat(slider.value).toFixed(1);
+}
+
+document.getElementById('overs').addEventListener('input', function() {
+  const v = parseFloat(this.value).toFixed(1);
+  document.getElementById('oversLabel').textContent = v;
+  document.getElementById('oversVal').textContent = v;
+});
+
+function showError(msg) {
+  const e = document.getElementById('errorBox');
+  e.textContent = '⚠️ ' + msg;
+  e.style.display = 'block';
+  setTimeout(() => e.style.display = 'none', 4000);
+}
+
+function predict() {
+  const t1 = document.getElementById('team1').value;
+  const t2 = document.getElementById('team2').value;
+  const venue = document.getElementById('venue').value;
+  const runs = parseInt(document.getElementById('currentRuns').value);
+  const wickets = parseInt(document.getElementById('wickets').value);
+  const overs = parseFloat(document.getElementById('overs').value);
+
+  if (!t1) return showError('Please select the batting team.');
+  if (!t2) return showError('Please select the bowling team.');
+  if (t1 === t2) return showError('Batting and bowling teams cannot be the same.');
+  if (!venue) return showError('Please select a venue type.');
+  if (isNaN(runs) || runs < 0) return showError('Please enter valid current runs.');
+  if (overs <= 0) return showError('Overs must be greater than 0.');
+
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('errorBox').style.display = 'none';
+
+  setTimeout(() => callClaudeAPI(t1, t2, venue, runs, wickets, overs), 600);
+}
+
+async function callClaudeAPI(t1, t2, venue, runs, wickets, overs) {
+  const crr = parseFloat(document.getElementById('crr').value) || (runs / overs);
+  const last5 = parseInt(document.getElementById('last5').value) || 0;
+  const battStr = document.getElementById('battingStrength').value;
+  const bowlQ = document.getElementById('bowlingQuality').value;
+  const weather = document.getElementById('weather').value;
+  const totalOvers = maxOvers[matchFormat];
+  const oversLeft = (totalOvers - overs).toFixed(1);
+  const wicketsLeft = 10 - wickets;
+
+  const prompt = `You are a cricket analytics AI. Predict the final score for this match.
+
+MATCH DATA:
+- Format: ${matchFormat} (Total ${totalOvers} overs)
+- Batting: ${t1} vs Bowling: ${t2}
+- Pitch: ${venue}, Weather: ${weather}
+- Score: ${runs}/${wickets} in ${overs} overs
+- Current RR: ${crr.toFixed(2)}, Last 5 overs: ${last5} runs
+- Batting strength: ${battStr}, Bowling quality: ${bowlQ}
+- Overs left: ${oversLeft}, Wickets remaining: ${wicketsLeft}
+
+Respond ONLY in this exact JSON format (no markdown, no extra text):
+{
+  "predictedScore": 185,
+  "minScore": 172,
+  "maxScore": 198,
+  "projectedRR": 9.2,
+  "winProbBatting": 62,
+  "winProbBowling": 38,
+  "confidence": "HIGH",
+  "momentum": "RISING",
+  "factors": [
+    {"text": "Strong batting lineup with power hitters remaining", "impact": "HIGH"},
+    {"text": "Pitch favors batting in second half", "impact": "HIGH"},
+    {"text": "Good current run rate maintained", "impact": "MED"},
+    {"text": "Overcast conditions may help bowlers", "impact": "LOW"}
+  ],
+  "analysis": "2-3 sentence expert analysis of the match situation and prediction rationale."
+}`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    if (!response.ok) throw new Error('API error: ' + response.status);
+    const data = await response.json();
+    const raw = data.content.map(i => i.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    displayResults(result, t1, t2, overs, wickets, totalOvers);
+  } catch (err) {
+    // Fallback calculation if API fails
+    const fallback = calculateFallback(runs, wickets, overs, crr, last5, venue, battStr, bowlQ, totalOvers);
+    displayResults(fallback, t1, t2, overs, wickets, totalOvers);
+  }
+}
+
+function calculateFallback(runs, wickets, overs, crr, last5, venue, battStr, bowlQ, totalOvers) {
+  const venueMult = {batting:1.1,balanced:1.0,bowling:0.88,spin:0.92,seam:0.9}[venue]||1;
+  const battMult = {elite:1.12,strong:1.05,average:0.97,weak:0.88}[battStr]||1;
+  const bowlMult = {elite:0.88,strong:0.94,average:1.0,weak:1.1}[bowlQ]||1;
+  const momentum = last5 > 50 ? 1.05 : last5 > 35 ? 1.0 : 0.94;
+  const wicketPenalty = Math.max(0, 1 - (wickets * 0.04));
+  const oversLeft = totalOvers - overs;
+  const projRR = crr * venueMult * battMult * bowlMult * momentum * wicketPenalty;
+  const predictedScore = Math.round(runs + (projRR * oversLeft));
+  const winP = Math.min(85, Math.max(15, 50 + (wickets < 3 ? 15 : wickets < 6 ? 5 : -10) + (crr > 9 ? 12 : crr > 7 ? 5 : -5)));
+  return {
+    predictedScore,
+    minScore: Math.round(predictedScore * 0.93),
+    maxScore: Math.round(predictedScore * 1.07),
+    projectedRR: projRR.toFixed(2),
+    winProbBatting: winP,
+    winProbBowling: 100 - winP,
+    confidence: wickets < 4 && overs < totalOvers * 0.7 ? "HIGH" : "MEDIUM",
+    momentum: last5 > 50 ? "RISING" : last5 > 35 ? "STEADY" : "FALLING",
+    factors: [
+      {text: `${battStr.charAt(0).toUpperCase()+battStr.slice(1)} batting lineup in current form`, impact: "HIGH"},
+      {text: `${venue} pitch conditions affecting run-scoring`, impact: "HIGH"},
+      {text: `Current run rate of ${crr} per over`, impact: "MED"},
+      {text: `${wickets} wickets down — pressure on middle order`, impact: wickets > 4 ? "HIGH" : "LOW"}
+    ],
+    analysis: `Based on the current match situation with ${runs}/${wickets} in ${overs} overs, the batting team is on track for a ${predictedScore > 180 ? 'strong' : predictedScore > 150 ? 'competitive' : 'below-par'} total. The ${venue} pitch and current run rate suggest a projected final score in the range of ${Math.round(predictedScore*0.93)}–${Math.round(predictedScore*1.07)}.`
+  };
+}
+
+function displayResults(r, t1, t2, overs, wickets, totalOvers) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+
+  document.getElementById('predScore').textContent = r.predictedScore + ' / 10';
+  document.getElementById('scoreRange').textContent = `Likely range: ${r.minScore} – ${r.maxScore}`;
+  document.getElementById('projRR').textContent = r.projectedRR;
+  document.getElementById('reqScore').textContent = (r.predictedScore + 1) + '';
+  document.getElementById('wicketsLeft').textContent = (10 - wickets);
+  document.getElementById('oversLeft').textContent = (totalOvers - overs).toFixed(1);
+  document.getElementById('formatLabel').textContent = matchFormat;
+
+  const mom = r.momentum || 'STEADY';
+  const momColor = mom === 'RISING' ? 'var(--green)' : mom === 'FALLING' ? 'var(--red)' : 'var(--accent)';
+  document.getElementById('momentum').textContent = mom;
+  document.getElementById('momentum').style.color = momColor;
+
+  document.getElementById('team1Name').textContent = t1.toUpperCase();
+  document.getElementById('team2Name').textContent = t2.toUpperCase();
+
+  setTimeout(() => {
+    document.getElementById('bar1').style.width = r.winProbBatting + '%';
+    document.getElementById('bar2').style.width = r.winProbBowling + '%';
+  }, 100);
+
+  document.getElementById('pct1').textContent = r.winProbBatting + '%';
+  document.getElementById('pct2').textContent = r.winProbBowling + '%';
+
+  const conf = r.confidence || 'MEDIUM';
+  const badge = document.getElementById('confBadge');
+  badge.textContent = conf + ' CONFIDENCE';
+  badge.className = 'confidence-badge ' + (conf === 'HIGH' ? 'conf-high' : conf === 'MEDIUM' ? 'conf-med' : 'conf-low');
+
+  const fl = document.getElementById('factorsList');
+  fl.innerHTML = '';
+  (r.factors || []).forEach(f => {
+    const colors = {HIGH: 'var(--green)', MED: 'var(--accent)', LOW: 'var(--accent2)'};
+    const impClass = {HIGH:'impact-high',MED:'impact-med',LOW:'impact-low'}[f.impact]||'impact-med';
+    fl.innerHTML += `<li>
+      <span class="factor-dot" style="background:${colors[f.impact]||'var(--accent)'}"></span>
+      ${f.text}
+      <span class="factor-impact ${impClass}">${f.impact}</span>
+    </li>`;
+  });
+
+  document.getElementById('aiAnalysis').textContent = r.analysis || 'Analysis not available.';
+
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+</body>
+</html>
